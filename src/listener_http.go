@@ -230,8 +230,6 @@ func ListenHTTP(port int) {
 
 			items := strings.Split(c.Request().URL.Path, "/")
 			operation := items[1]
-
-			setStatus(command.Operation)
 			
 			result := &RestOperationResult{
 				Operation: operation,
@@ -253,6 +251,7 @@ func ListenHTTP(port int) {
 					break
 				}
 			}
+			setStatus(command.Operation)
 			return renderResult(c, http.StatusOK, result)
 		})
 	}
@@ -282,10 +281,11 @@ func ListenHTTP(port int) {
 		return renderResult(c, http.StatusOK, result)
 	})
 
-	dumpRoute("state/status")
-	e.GET("/state/status", func(c echo.Context) error {
-		return c.String(http.StatusOK, strconv.FormatBool(getSleepStatus()))
-	})
+	dumpRoute("/state/sleepstatus")
+	e.GET("/state/sleepstatus", func(c echo.Context) error {
+	        status := getSleepStatus() // Assuming you have a getSleepStatus() function
+	        return c.JSON(http.StatusOK, map[string]bool{"isSleeping": status})
+ 	})
 
 	dumpRoute("state/ip/:ip")
 	e.GET("/state/ip/:ip", func(c echo.Context) error {
