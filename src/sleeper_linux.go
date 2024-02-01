@@ -14,7 +14,7 @@ func RegisterPossibleConfigurationFileNames() []PossibleConfigurationFilename {
 
 func ExecuteCommand(Command CommandConfiguration) {
 	if Command.CommandType == COMMAND_TYPE_EXTERNAL {
-		logger.Infof("Executing operation [" + Command.Operation + "], type [" + Command.Command + "], command [" + Command.Command + "]")
+		logger.Infof("Executing operation [" + Command.Operation + "], type [" + Command.CommandType + "], command [" + Command.Command + "]")
 		sleepCommandLineImplementation(Command.Command)
 	} else {
 		logger.Infof("Unknown command type [" + Command.CommandType + "]")
