@@ -49,11 +49,14 @@ func sleepCommandLineImplementation(cmd string) {
 		cmd = "C:\\Windows\\System32\\rundll32.exe powrprof.dll,SetSuspendState 0,1,1"
 	}
 	logger.Infof("Sleep implementation [windows], sleep command is [", cmd, "]")
-	_, _, err := Execute(cmd)
-	if err != nil {
-		logger.Errorf("Can't execute command [" + cmd + "] : " + err.Error())
+	result := Execute(cmd)
+	if result.Success {
+		logger.Errorf("Command executed successfully:")
+		logger.Errorf(result.Output)
 	} else {
-		logger.Infof("Command correctly executed")
+		logger.Errorf("Command execution failed:")
+		logger.Errorf("Error:", result.Error)
+		logger.Errorf("Output:", result.Output)
 	}
 }
 
