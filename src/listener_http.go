@@ -10,33 +10,14 @@ import (
 	"strings"
 	"time"
 	"fmt"
-  	"sync/atomic"
+  	"net/http"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-
+    	"github.com/labstack/echo/v4"
+    	"github.com/shirou/gopsutil/process"
 	"github.com/go-ping/ping" // for ping
 	// "github.com/mdlayher/arp" // for mac > ip conversion
 )
-
-var isSleeping int32
-
-func setStatus(status string) {
-    var newValue int32
-    switch status {
-    case "wake":
-        newValue = 0
-    case "sleep":
-        newValue = 1
-    default:
-        fmt.Println("Invalid status:", status)
-        return
-    }
-    atomic.StoreInt32(&isSleeping, newValue)
-}
-
-func getSleepStatus() bool {
-    return atomic.LoadInt32(&isSleeping) == 1
-}
 
 type RestResultHost struct {
 	XMLName            xml.Name `xml:"host" json:"-"`
@@ -111,6 +92,22 @@ func dumpRoute(route string) {
 // func retrieveIpFromMac(mac strinc) string {
 // requires defined interface ...
 // }
+
+func isXScreenSaverRunning() (bool, error) {
+    processes, err := process.Processes()
+    if err != nil {
+        return false, err
+    }
+
+    for _, proc := range processes {
+        name, err := proc.Name()
+        if err == nil && name == "xscreensaver" {
+            return true, nil
+        }
+    }
+
+    return false, nil
+}
 
 func renderResult(c echo.Context, status int, result interface{}) error {
 	// c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationXMLCharsetUTF8) // echo.MIMETextXMLCharsetUTF8)
@@ -251,7 +248,6 @@ func ListenHTTP(port int) {
 					break
 				}
 			}
-			setStatus(command.Operation)
 			return renderResult(c, http.StatusOK, result)
 		})
 	}
@@ -282,10 +278,17 @@ func ListenHTTP(port int) {
 	})
 
 	dumpRoute("/state/sleepstatus")
-	e.GET("/state/sleepstatus", func(c echo.Context) error {
-	        status := getSleepStatus() // Assuming you have a getSleepStatus() function
-	        return c.JSON(http.StatusOK, map[string]bool{"isSleeping": status})
- 	})
+	e.GET("/check-xscreensaver", func(c echo.Context) error {
+		isRunning, err := isXScreenSaverRunning()
+		if err != nil {
+		    return c.JSON(http.StatusInternalServerError, map[string]interface{}{
+			"error": err.Error(),
+		    })
+		}
+	
+		response := map[string]bool{"isRunning": isRunning}
+		return c.JSON(http.StatusOK, response)
+	    })
 
 	dumpRoute("state/ip/:ip")
 	e.GET("/state/ip/:ip", func(c echo.Context) error {
