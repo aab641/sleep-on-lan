@@ -5,15 +5,21 @@ import (
 	"strings"
 )
 
-func Execute(command string) (bool, string, error) {
-	// splitting head => g++ parts => rest of the command
-	parts := strings.Fields(command)
-	head := parts[0]
-	parts = parts[1:]
+type CommandResult struct {
+    Success bool
+    Output  string
+    Error   error
+}
 
-	out, err := exec.Command(head, parts...).Output()
-	if err != nil {
-		return false, string(out), err
-	}
-	return true, string(out), nil
+func Execute(command string) CommandResult {
+    cmd := exec.Command("sh", "-c", command)
+    output, err := cmd.CombinedOutput()
+
+    result := CommandResult{
+        Success: err == nil,
+        Output:  string(output),
+        Error:   err,
+    }
+
+    return result
 }
