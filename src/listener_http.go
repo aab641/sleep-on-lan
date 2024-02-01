@@ -96,9 +96,17 @@ func isXScreenSaverRunning() (bool, error) {
         return false, err
     }
 
+    // Define the process name based on the OS
+    var processName string
+    if runtime.GOOS == "windows" {
+        processName = "xscreensaver.exe"
+    } else {
+        processName = "xscreensaver"
+    }
+
     for _, proc := range processes {
         name, err := proc.Name()
-        if err == nil && name == "xscreensaver" {
+        if err == nil && name == processName {
             return true, nil
         }
     }
