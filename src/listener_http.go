@@ -287,7 +287,7 @@ func ListenHTTP(port int) {
 
 	dumpRoute("state/status")
 	e.GET("/state/status", func(c echo.Context) error {
-		return c.String(http.StatusOK, getSleepStatus())
+		return c.String(http.StatusOK, strconv.FormatBool(getSleepStatus()))
 	})
 
 	dumpRoute("state/ip/:ip")
