@@ -9,13 +9,37 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
+	"fmt"
+  	"sync"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 
 	"github.com/go-ping/ping" // for ping
 	// "github.com/mdlayher/arp" // for mac > ip conversion
 )
+
+var isSleeping bool
+var mutex sync.Mutex
+
+func toggleSleepStatus(status string) {
+    mutex.Lock()
+    defer mutex.Unlock()
+
+    switch status {
+    case "wake":
+        isSleeping = false
+    case "sleep":
+        isSleeping = true
+    default:
+        fmt.Println("Invalid status:", status)
+    }
+}
+
+func getSleepStatus() bool {
+    mutex.Lock()
+    defer mutex.Unlock()
+    return isSleeping
+}
 
 type RestResultHost struct {
 	XMLName            xml.Name `xml:"host" json:"-"`
@@ -210,6 +234,8 @@ func ListenHTTP(port int) {
 			items := strings.Split(c.Request().URL.Path, "/")
 			operation := items[1]
 
+			toggleSleepStatus(command.Operation)
+			
 			result := &RestOperationResult{
 				Operation: operation,
 				Result:    true,
@@ -257,6 +283,11 @@ func ListenHTTP(port int) {
 			State: HOST_STATE_ONLINE,
 		}
 		return renderResult(c, http.StatusOK, result)
+	})
+
+	dumpRoute("state/status")
+	e.GET("/state/status", func(c echo.Context) error {
+		return c.String(http.StatusOK, getSleepStatus())
 	})
 
 	dumpRoute("state/ip/:ip")
