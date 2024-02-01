@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 	"fmt"
-  	"sync"
+  	"sync/atomic"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 
@@ -18,27 +18,24 @@ import (
 	// "github.com/mdlayher/arp" // for mac > ip conversion
 )
 
-var isSleeping bool
-var mutex sync.Mutex
+var isSleeping int32
 
-func toggleSleepStatus(status string) {
-    mutex.Lock()
-    defer mutex.Unlock()
-
+func setStatus(status string) {
+    var newValue int32
     switch status {
     case "wake":
-        isSleeping = false
+        newValue = 0
     case "sleep":
-        isSleeping = true
+        newValue = 1
     default:
         fmt.Println("Invalid status:", status)
+        return
     }
+    atomic.StoreInt32(&isSleeping, newValue)
 }
 
 func getSleepStatus() bool {
-    mutex.Lock()
-    defer mutex.Unlock()
-    return isSleeping
+    return atomic.LoadInt32(&isSleeping) == 1
 }
 
 type RestResultHost struct {
@@ -234,7 +231,7 @@ func ListenHTTP(port int) {
 			items := strings.Split(c.Request().URL.Path, "/")
 			operation := items[1]
 
-			toggleSleepStatus(command.Operation)
+			setStatus(command.Operation)
 			
 			result := &RestOperationResult{
 				Operation: operation,
