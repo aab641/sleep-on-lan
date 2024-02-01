@@ -26,10 +26,22 @@ func sleepCommandLineImplementation(cmd string) {
 		cmd = "pm-suspend"
 	}
 	logger.Infof("Sleep implementation [linux], sleep command is [" + cmd + "]")
+
+	
 	_, _, err := Execute(cmd)
 	if err != nil {
 		logger.Errorf("Can't execute command [" + cmd + "] : " + err.Error())
 	} else {
 		logger.Infof("Command correctly executed")
+	}
+
+ 	result := Execute(command)
+	if result.Success {
+		logger.Errorf("Command executed successfully:")
+		logger.Errorf(result.Output)
+	} else {
+		logger.Errorf("Command execution failed:")
+		logger.Errorf("Error:", result.Error)
+		logger.Errorf("Output:", result.Output)
 	}
 }
