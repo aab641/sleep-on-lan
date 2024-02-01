@@ -277,8 +277,8 @@ func ListenHTTP(port int) {
 		return renderResult(c, http.StatusOK, result)
 	})
 
-	dumpRoute("/state/check-xscreensaver")
-	e.GET("state/check-xscreensaver", func(c echo.Context) error {
+	dumpRoute("state/check-xscreensaver")
+	e.GET("/state/check-xscreensaver", func(c echo.Context) error {
 		isRunning, err := isXScreenSaverRunning()
 		if err != nil {
 		    return c.JSON(http.StatusInternalServerError, map[string]interface{}{
