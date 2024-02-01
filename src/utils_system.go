@@ -1,7 +1,9 @@
 package main
 
 import (
-	"os/exec"
+    "os/exec"
+    "strings"
+    "runtime"
 )
 
 type CommandResult struct {
@@ -11,7 +13,13 @@ type CommandResult struct {
 }
 
 func Execute(command string) CommandResult {
-    cmd := exec.Command("sh", "-c", command)
+    var cmd *exec.Cmd
+    if runtime.GOOS == "windows" {
+        cmd = exec.Command("cmd", "/C", command)
+    } else {
+        cmd = exec.Command("sh", "-c", command)
+    }
+
     output, err := cmd.CombinedOutput()
 
     result := CommandResult{
